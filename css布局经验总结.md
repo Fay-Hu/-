@@ -10,3 +10,4 @@ css经验总结
   background:linear-gradient(-135deg, transparent 2em, #58a 0);
   
 ```
+  -css transitionend和animationend有多个属性动画时会触发多次，使用jq的one()绑定可以保证只执行一次
