@@ -11,7 +11,7 @@
 		border-left: 1px solid #dedede;
 		content: "";
 	}
-  6   .wrap .box +.box >.item:after {
+  	6. .wrap .box +.box >.item:after {
 		position: absolute;
 		top: 8px;
 		left: -89px;
