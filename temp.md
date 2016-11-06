@@ -1,60 +1,89 @@
-# -
-	1. 左侧工具栏是否满屏
-	2. Relation结构  box->(item-wrap)
-	3. 横向为子元素；纵向为兄弟元素
-	4. 关系图标绝对定位，设置垂直居中,固定right值
-	5. .wrap .box +.box >.item:before {
-		position: absolute;
-		left: -89px;
-		top: -10000px;
-		bottom: 30px;
-		border-left: 1px solid #dedede;
-		content: "";
-	}
-  	6. .wrap .box +.box >.item:after {
-		position: absolute;
-		top: 8px;
-		left: -89px;
-		width: 87px;
-		height: 10px;
-		border: 1px solid #dedede;
-		border-width: 0 0 1px 1px;
-		border-bottom-left-radius: 10px;
-		content: "";
-	}
-	7. .wrap .box:first-child >.item:before {
-		position: absolute;
-		z-index: 200;
-		top: -1px;
-		left: -89px;
-		width: 1px;
-		height: 20px;
-		background: #fff;
-		content: "";
-	}
-	8. .wrap .box:first-child >.item:after {
-		position: absolute;
-		top: 19px;
-		left: -120px;
-		width: 120px;
-		border-top: 1px solid #dedede;
-		content: "";
-	}
-	9. .m-map .item .opt {
-		position: absolute;
-		z-index: 9;
-		left: -56px;
-		top: 50%;
-		width: 26px;
-		height: 26px;
-		line-height: 26px;
-		margin-top: -13px;
-		text-align: center;
-		border: 1px solid #ddd;
-		border-radius: 50%;
-		color: #999;
-		background: #fff;
-		cursor: pointer;
-	}
-	10. height: calc(50vh - 107px);
+<!DOCTYPE html>
+<html>
 
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<title>JS Bin</title>
+		<style type="text/css">
+			.box {}
+			
+			.wrap {
+				display: inline-block;
+			}
+			
+			.item {
+				height: 40px;
+				width: 70px;
+				margin: 10px;
+				background: red;
+				display: inline-block;
+				vertical-align: top;
+			}
+		</style>
+	</head>
+
+	<body>
+		<button class="clear">清空</button><button class="recover">恢复</button>
+		<div class="area">
+			<div class="box">
+				<div class="item">1</div>
+				<div class="wrap">
+					<div class="box">
+						<div class=item>2</div>
+						<div class="wrap">
+							<div class="box">
+								<div class="item">3</div>
+								<div class="wrap"></div>
+							</div>
+						</div>
+					</div>
+					<div class="box">
+						<div class="item">4</div>
+						<div class="wrap"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+		<script type="text/javascript">
+			var TEMPLATE = '<div class="box"><div class="item">${text}</div><div class="wrap"></div></div>';
+
+			var getData = function() {
+				var _getChild = function($node) {
+					return $.map($node.children('.box'), function(v, i) {
+						return {
+							text: $('>.item', v).text(),
+							children: _getChild($(v).children('.wrap'))
+						};
+					});
+				};
+				return _getChild($('.area'))[0];
+			};
+
+			var recover = function(data) {
+				var _renderChild = function(data, $ele) {
+					$.each(data.children, function(i, v) {
+						var $temp = $(TEMPLATE.replace(/\$\{text\}/, v.text));
+
+						$ele.find('.wrap').append($temp);
+						_renderChild(v, $temp)
+					});
+				};
+				
+				var $temp = $(TEMPLATE.replace(/\$\{text\}/, data.text));
+				_renderChild(data, $temp)
+				$('.area').append($temp);
+			};
+			var data = getData($('.area'));
+			console.log(JSON.stringify(data))
+			$(document).on('click', '.clear', function() {
+					$('.area').empty();
+				})
+				.on('click', '.recover', function() {
+					recover(data);
+				});
+		</script>
+	</body>
+
+</html>
