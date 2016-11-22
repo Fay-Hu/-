@@ -22,4 +22,5 @@ css经验总结 前端站点性能检测工具：yellow lab tools
   ```css
   input,input:focus,input:active{user-select: text;}
   ```
-
+## css兼容性
+  - Firefox及IE下给div设置区域滚动后，会导致容器的padding-bottom值失效，chrome下则不会
