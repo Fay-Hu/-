@@ -24,3 +24,4 @@ css经验总结 前端站点性能检测工具：yellow lab tools
   ```
 ## css兼容性
   - Firefox及IE下给div设置区域滚动后，会导致容器的padding-bottom值失效，chrome下则不会
+  - IE以下的媒体查询兼容库对于内联样式无法生效，所以如果要兼容IE8,不要在style标签里写媒体查询
