@@ -7,12 +7,47 @@
 	</head>
 
 	<body>
-		<div id="preloader_2">
-			<span></span>
-			<span></span>
-			<span></span>
-			<span></span>
-		</div>
+		<header>
+			Header
+		</header>
+		<view>
+			
+		</view>
+		<footer>
+			Footer
+		</footer>
+		<script type="text/javascript" src="js/jquery-1.11.0.js"></script>
+		<script src="js/router.js"></script>
+		<script>
+			page({
+				hashbang:true,
+				dispatch:false
+			})
+	
+			page('/content', show)
+			page('/home', index)
+			page('*', index)
+//			page('*', function(ctx, next) {
+//				if(ctx.init) {
+//					next();
+//				}
+//			})
+			
+			page()
+			if(location.hash !== ''){
+				page(location.hash.replace(/^#\?/,''));
+			}else{
+				page('/home')
+			}	
+
+			function show() {
+				$('view').load('content.html')
+			}
+
+			function index() {
+				$('view').load('home.html')
+			}
+		</script>
 	</body>
 
 </html>
