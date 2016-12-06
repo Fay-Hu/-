@@ -30,8 +30,11 @@
 				<rect width="4000" height="4000" x="-2000" y="-2000" fill="url(#grid)" stroke="blue"></rect>
 				<circle cx="150" cy="150" r="50" fill="white"></circle>
 				<image x="20" y="20" width="150" height="46" xlink:href="http://img.htmleaf.com/1506/logo.png" />
-				
+				<foreignobject>
+					<div contenteditable="false">sdfdsf</div>
+				</foreignobject>
 			</svg>
+			
 		</div>
 		<script type="text/javascript" src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.js"></script>
 		<script>
@@ -62,6 +65,11 @@
 					dragStartX = e.pageX;
 					dragStartY = e.pageY;
 				});
+			$('[contenteditable="false"]').on('dblclick',function(){
+				$(this).attr('contenteditable',true);
+			}).on('blur',function(){
+				$(this).attr('contenteditable',false);
+			});
 		</script>
 	</body>
 
