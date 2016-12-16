@@ -48,7 +48,6 @@ UCD.registerWidget('Flow', function(SUPER) {
     }
   };
 
-  var stageSize = 400;
   return {
     options: {
       minSpace: 2,
@@ -274,10 +273,13 @@ UCD.registerWidget('Flow', function(SUPER) {
       return [Math.floor(cxCy[0] / cellSize), Math.floor(cxCy[1] / cellSize)];
     },
     _getPutPosition: function(cx, cy) {
-      var cellSize = this.options.cellSize,
-        cxCy = this._getStageCxCy(cx, cy);
+      var
+        cellSize = this.options.cellSize,
+        cxCy = this._getStageCxCy(cx, cy),
+        cxSymbol = cxCy[0] >= 0 ? 1 : -1,
+        cySymbol = cxCy[1] >= 0 ? 1 : -1;
 
-      return [cxCy[0] - Math.floor(cxCy[0] % cellSize) + cellSize / 2, cxCy[1] - Math.floor(cxCy[1] % cellSize) + cellSize / 2];
+      return [cxCy[0] - Math.floor(cxCy[0] % cellSize) + cellSize / 2 * cxSymbol, cxCy[1] - Math.floor(cxCy[1] % cellSize) + cellSize / 2 * cySymbol];
     },
     /**
      *
