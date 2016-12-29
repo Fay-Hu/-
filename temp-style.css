@@ -1,68 +1,102 @@
-$flow-grid-dot-color: #dadcdf;
-.#{$ns}flow {
-  height: 100%;
-  overflow: hidden;
-  user-select: none;
-  .#{$ns}stage {
-    height: 100%;
-    width: 100%;
-    .#{$ns}dot {
-      stroke: $flow-grid-dot-color;
-      fill: none;
-      stroke-width: 1;
+.workflow{
+    width:180px;
+    height: 110px;
+    background: white;
+    transition: border-image ease .5s;
+    box-shadow: 0 0 5px #e6e9ef;
+    cursor: move;
+    z-index: 2;
+    &.start,
+    &.end{
+        position: absolute;
+        width: 60px;
+        height: 62px;
+        .workflow-content{
+            text-align: center;
+            border-bottom: none;
+        }
     }
-  }
-  .#{$ns}line {
-    fill: none;
-    stroke: #8f9eb3;
-    stroke-width: 2;
-    &:hover, &.#{ns}active {
-      stroke: #89ce45;
-      stroke-width: 3;
+    &.start{
+       top: 40%; 
+       left: 100px;
     }
-    &.#{$ns}flow-preset {
-      stroke-dasharray: 7;
-      stroke: #89ce45;
-      pointer-events: none;
+    &.end{
+        top: 40%;
+        right: 100px;
+        .workflow-pointer{
+            cursor:move;
+        }
     }
-  }
-  &-step {
-    fill:rgba(white,0);
-    stroke: #6c79a2;
-    stroke-width: 2;
-    cursor: pointer;
-  }
-  &-item {
-    .#{$ns}text {
-      fill: #6f7479;
+    &.active,
+    &:hover{           
+        outline: 1px solid #00b0ff \0;
+        border-image: url("../images/workflow/active-bg.png") 7  fill/7px/7px;
     }
-    .#{$ns}icon {
-      width: 40px;
-      height: 40px;
+    &-content{
+        position: relative;
+        height: 80px;
+        padding: 15px 10px;
+        border-bottom: 1px solid #cccccc;
+        .btn-close{
+            position: absolute;
+            right: 5px;
+            top: 0;
+        }
+        .workflow-img{
+            position: absolute;
+            max-width:30px ;
+            overflow: hidden;
+        }
+        .label{
+            margin-left: 40px;
+            word-break: break-all;
+            white-space: normal;
+            line-height: 1.2;
+            @include ellipsis(3,$text-default,1.2);
+        }
     }
-    &.#{$ns}active, &:hover {
-      .#{$ns}text {
-        fill: #89ce45;
-      }
-      .#{$ns}flow-step {
-        stroke: #89ce45;
-        stroke-width: 3;
-      }
-      .#{ns}icon {
-
-      }
+    &-footer{
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
     }
-    &.#{$ns}flow-preset {
-      .#{$ns}flow-step {
-        stroke-dasharray: 7;
-        stroke: #89ce45;
+    &-pointer{
+        cursor: copy;
+        transition: transform ease-in .3s;
+        &.active,
+        &:hover{
+            transform: scale(1.2);
+        }
+    }
+    //svg
+    &-preset-stage{
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        z-index: 3;
         pointer-events: none;
-      }
     }
-  }
-
-  .#{$ns}grid-cell {
-    stroke: #dadcdf;
-  }
-
+    &-line{
+        stroke: #b2b9c1;
+        fill: none;
+        stroke-width: 1px;     
+    }
+}
+.worktask{
+    padding: 15px;
+    .item{
+        padding:5px ;
+        text-align: center;
+        margin-top: 10px;
+        cursor: move;
+        &:first-child{
+            margin-top: 0;
+        }
+        &.active,
+        &:hover{
+            //outline: 1px solid #00b0ff;
+        }
+    }
 }
