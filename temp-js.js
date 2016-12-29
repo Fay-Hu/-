@@ -240,26 +240,27 @@ UCD.registerWidget('Workflow', function(SUPER) {
 				startY = $start.position().top,
 				endX = $end.position().left,
 				endY = $end.position().top,
+				xMin = Math.min(startX,endX),
+				yMin = Math.min(startY,endY),
 				//连线方向 1表示正，-1表示负
 				deltaX = endX - startX,
 				deltaY = endY - startY,
 				//在左边的item
-				L = deltaX > 0 ? $start : $end,
+				L = deltaX >= 0 ? $start : $end,
 				//在右边的item
 				R = deltaX < 0 ? $start : $end;
 
-			var lineStart = [L.width(), L.position().top - startY + L.height() / 2],
-				lineEnd = [R.position().left  - startX, R.position().top - startY + R.height() / 2];
+			var lineStart = [L.width(), L.position().top - yMin + L.height() / 2],
+				lineEnd = [R.position().left  - xMin, R.position().top - yMin + R.height() / 2];
 			
-			console.log(lineStart,lineEnd)
 			return {
 				path: this._getLinePath(lineStart, lineEnd),
 				//包裹线的svg的样式
 				wrapCss: {
 					width: Math.max(lineStart[0], lineEnd[0]),
 					height: Math.max(lineStart[1], lineEnd[1]),
-					left: Math.min(startX, endX),
-					top: Math.min(startY, endY)
+					left: xMin,
+					top: yMin
 				}
 			}
 		},
