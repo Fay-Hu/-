@@ -81,7 +81,14 @@
     &-line{
         stroke: #b2b9c1;
         fill: none;
-        stroke-width: 1px;     
+        stroke-width: 1px;   
+        &:hover{
+            stroke: #00b0ff;
+            stroke-width: 2px;
+        }  
+        &-wrap{
+            position: absolute;
+        }
     }
 }
 .worktask{
