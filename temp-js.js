@@ -236,12 +236,14 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		 */
 		_getLinePathFromEle: function($start, $end) {
 			var
-				startX = $start.position().left,
-				startY = $start.position().top,
-				endX = $end.position().left,
-				endY = $end.position().top,
-				xMin = Math.min(startX,endX),
-				yMin = Math.min(startY,endY),
+				scrollTop = this.$dropContainer.scrollTop(),
+				scrollLeft = this.$dropContainer.scrollLeft(),
+				startX = $start.position().left + scrollLeft,
+				startY = $start.position().top + scrollTop,
+				endX = $end.position().left + scrollLeft,
+				endY = $end.position().top + scrollTop,
+				xMin = Math.min(startX, endX),
+				yMin = Math.min(startY, endY),
 				//连线方向 1表示正，-1表示负
 				deltaX = endX - startX,
 				deltaY = endY - startY,
@@ -250,9 +252,9 @@ UCD.registerWidget('Workflow', function(SUPER) {
 				//在右边的item
 				R = deltaX < 0 ? $start : $end;
 
-			var lineStart = [L.width(), L.position().top - yMin + L.height() / 2],
-				lineEnd = [R.position().left  - xMin, R.position().top - yMin + R.height() / 2];
-			
+			var lineStart = [L.width(), L.position().top + scrollTop - yMin + L.height() / 2],
+				lineEnd = [R.position().left + scrollLeft - xMin, R.position().top + scrollTop - yMin + R.height() / 2];
+
 			return {
 				path: this._getLinePath(lineStart, lineEnd),
 				//包裹线的svg的样式
