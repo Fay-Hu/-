@@ -11,18 +11,17 @@
         position: absolute;
         width: 60px;
         height: 62px;
+        top: 100px;
         .workflow-content{
             text-align: center;
             border-bottom: none;
         }
     }
-    &.start{
-       top: 40%; 
+    &.start{        
        left: 100px;
     }
     &.end{
-        top: 40%;
-        right: 100px;
+        left: 770px;
         .workflow-pointer{
             cursor:move;
         }
