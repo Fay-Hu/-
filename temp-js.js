@@ -218,7 +218,7 @@ UCD.registerWidget('Workflow', function(SUPER) {
 			$(e.target).closest('svg').remove();
 		},
 		_handleDragItem: function(e, pointer, moveVector ) {
-		
+			this.restoreLines($(e.currentTarget));
 		},
 
 		/**
@@ -280,6 +280,15 @@ UCD.registerWidget('Workflow', function(SUPER) {
 			});
 		},
 		/**
+		 * 
+		 * @param {Array} lines
+		 */
+		_deleteLines:function(lines){
+			$.each(lines, function(v,i) {
+				$(v).off().remove();
+			});
+		},
+		/**
 		 * 添加连线
 		 * @param {Object} $start 开始节点，如果传入一个参数，则视该参数为连线
 		 * @param {Object} $end  结束节点
@@ -305,7 +314,17 @@ UCD.registerWidget('Workflow', function(SUPER) {
 				$line.remove();
 			}
 			else if($line.is(SELECTORS.item)){
-				
+				this._deleteLines();
+			}
+		},
+		/**
+		 * 重置线条
+		 * @param {Object} $item 可选参数，不传则重置所有线条
+		 */
+		restoreLines:function($item){
+			if($item){
+				this._deleteLines($item.data(DATA.fromLines));
+				this._deleteLines($item.data(DATA.toLines));
 			}
 		}
 	};
