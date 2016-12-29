@@ -204,7 +204,7 @@ UCD.registerWidget('Workflow', function(SUPER) {
 				});
 			}
 		},
-		
+
 		_handleBranchMouseup: function(e) {
 			if (!this.branching) return;
 
@@ -217,7 +217,7 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		_handleLineDblClick: function(e) {
 			$(e.target).closest('svg').remove();
 		},
-		_handleDragItem: function(e, pointer, moveVector ) {
+		_handleDragItem: function(e, pointer, moveVector) {
 			this.restoreLines($(e.currentTarget));
 		},
 
@@ -235,23 +235,33 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		 * @param {Object} $end
 		 */
 		_getLinePathFromEle: function($start, $end) {
-			linePositon = this._getLineWrapPos($start, $end);
-			return this._getLinePath([0, 0], [linePositon.width, linePositon.height]);
-		},
-		_getLineWrapPos: function($start, $end) {
 			var
-				positionS = $start.position(),
-				positionE = $end.position(),
+				startX = $start.position().left,
+				startY = $start.position().top,
+				endX = $end.position().left,
+				endY = $end.position().top,
 				//连线方向 1表示正，-1表示负
-				directionX = positionE.left - positionS.left,
-				directionY = positionE.top - positionS.top;
+				deltaX = endX - startX,
+				deltaY = endY - startY,
+				//在左边的item
+				L = deltaX > 0 ? $start : $end,
+				//在右边的item
+				R = deltaX < 0 ? $start : $end;
 
+			var lineStart = [L.width(), L.position().top - startY + L.height() / 2],
+				lineEnd = [R.position().left  - startX, R.position().top - startY + R.height() / 2];
+			
+			console.log(lineStart,lineEnd)
 			return {
-				left: Math.min(positionS.left, positionE.left),
-				top: Math.min(positionS.top, positionE.top),
-				height: Math.abs(positionS.top - positionE.top) + (directionY > 0 ? $start.height() : $end.height()),
-				width: Math.abs(positionS.left - positionE.left) + (directionX > 0 ? $end.width() : $start.width())
-			};
+				path: this._getLinePath(lineStart, lineEnd),
+				//包裹线的svg的样式
+				wrapCss: {
+					width: Math.max(lineStart[0], lineEnd[0]),
+					height: Math.max(lineStart[1], lineEnd[1]),
+					left: Math.min(startX, endX),
+					top: Math.min(startY, endY)
+				}
+			}
 		},
 		/**
 		 * 
@@ -259,15 +269,17 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		 * @param {Object} $end
 		 */
 		_createLine: function($start, $end) {
+			var linePath = this._getLinePathFromEle($start, $end);
+
 			var $line = _createNS('svg', {
 					class: CLASSES.lineWrap
 				})
-				.css(this._getLineWrapPos($start, $end)).css('position', 'absolute')
+				.css(linePath.wrapCss)
 				.append(_createNS('path', {
 					class: CLASSES.line,
-					d: this._getLinePathFromEle($start, $end)
+					d: linePath.path
 				}));
-			
+
 			return $line;
 		},
 		_createItem: function() {
@@ -283,8 +295,8 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		 * 
 		 * @param {Array} lines
 		 */
-		_deleteLines:function(lines){
-			$.each(lines, function(v,i) {
+		_deleteLines: function(lines) {
+			$.each(lines, function(v, i) {
 				$(v).off().remove();
 			});
 		},
@@ -293,27 +305,26 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		 * @param {Object} $start 开始节点，如果传入一个参数，则视该参数为连线
 		 * @param {Object} $end  结束节点
 		 */
-		addLine:function($start,$end){
+		addLine: function($start, $end) {
 			var $presetLine;
-			if($start.is(SELECTORS.lineWrap)){
+			if ($start.is(SELECTORS.lineWrap)) {
 				$presetLine = $start;
 				//$start = $presetLine.data();
 				this.$dropContainer.append($start);
-			}else{
-				this.$dropContainer.append($presetLine = this._createLine($start,$end));
+			} else {
+				this.$dropContainer.append($presetLine = this._createLine($start, $end));
 				$start.data(DATA.fromLines) && $start.data(DATA.fromLines).push($presetLine);
 				$end.data(DATA.toLines) && $end.data(DATA.toLines).push($presetLine);
-			}						
+			}
 		},
 		/**
 		 * 删除连线
 		 * @param {Object} $line 连线或节点，如果传入节点，删除该节点上所有连线
 		 */
-		deleteLine:function($line){
-			if($line.is(SELECTORS.lineWrap)){
+		deleteLine: function($line) {
+			if ($line.is(SELECTORS.lineWrap)) {
 				$line.remove();
-			}
-			else if($line.is(SELECTORS.item)){
+			} else if ($line.is(SELECTORS.item)) {
 				this._deleteLines();
 			}
 		},
@@ -321,8 +332,8 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		 * 重置线条
 		 * @param {Object} $item 可选参数，不传则重置所有线条
 		 */
-		restoreLines:function($item){
-			if($item){
+		restoreLines: function($item) {
+			if ($item) {
 				this._deleteLines($item.data(DATA.fromLines));
 				this._deleteLines($item.data(DATA.toLines));
 			}
