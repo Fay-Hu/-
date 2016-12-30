@@ -39,19 +39,25 @@
 							<i class="icon icon-edit m-r-little"></i>
 							<input class="input title-input" type="text" placeholder="请输入工作流任务名称">
 						</span>
-						<div class="btn-group">
-							<a href="javascript:;" id="js-btn-build"><i class="icon icon-add"></i></a>
+						<div class="icon-tools float-right">
+							<a href="javascript:;"><i class="icon icon-undo"></i></a>
+							<a href="javascript:;"><i class="icon icon-redo"></i></a>
+							<a href="javascript:;"><i class="icon icon-clean"></i></a>
+							<a href="javascript:;"><i class="icon icon-debug"></i></a>
+							<a href="javascript:;"><i class="icon icon-split"></i></a>
+							<a href="javascript:;"><i class="icon icon-save"></i></a>
+							<a href="javascript:;"><i class="icon icon-close"></i></a>
 						</div>
 					</div>
 					<section class="section no-gutter">
-						<div class="edit-area edit-area-grid">
+						<div class="edit-area-higher edit-area-grid">
 							<div class="edit-content p" id="js-workflow">
 								<div class="workflow start">
 									<div class="workflow-content">
 										<span class="text">开始</span>
 										<div class="workflow-pointer">
 											<i class="icon icon-pointer-simple"></i>
-										</div>										
+										</div>
 									</div>
 								</div>
 								<div class="workflow end">
@@ -59,7 +65,7 @@
 										<span class="text">结束</span>
 										<div class="workflow-pointer">
 											<i class="icon icon-pointer-simple"></i>
-										</div>	
+										</div>
 									</div>
 								</div>
 							</div>
@@ -67,120 +73,127 @@
 					</section>
 					<section class="section" lang="en">
 						<div class="tabs">
-							<ul class="ucd-tabs-nav">
-								<li class="ucd-tabs-tab active" data-closable="false"><a href="#js-tab1">配置业务模型</a></li>
-								<li class="ucd-tabs-tab" data-closable="false"><a href="#js-tab2">模型数据预览</a></li>
-							</ul>
+							<ul class="ucd-tabs-nav m-r-0 p-b-little border-bottom-solid">
+								<li class="ucd-tabs-tab active" data-closable="false"><a href="#js-tab1">详情查看</a></li>
+								<li class="ucd-tabs-tab" data-closable="false"><a href="#js-tab2">历史任务</a></li>
+							</ul>							
 							<div class="ucd-tabs-pane active" id="js-tab1">
-								<div class="title-h3 m-t-0">
-									<span class="section-title-inner">数据连接选择</span>
-								</div>
-								<div class="form-wrap info-wrap">
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>数据传输名称
-											</div>
-											<div class="form-control">name2(db2.table 2)name2(db2.tab lename2(db2.ta...</div>
-										</div>
-									</div>
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>创建者
-											</div>
-											<div class="form-control">Admin</div>
-										</div>
-									</div>
-									<div class="form-item">
 
-									</div>
-								</div>
-								<div class="title-h3">
-									<span class="section-title-inner">源数据展示</span>
-								</div>
-								<div class="form-wrap info-wrap">
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>文件类型选择
-											</div>
-											<div class="form-control">CSV</div>
+								<div class="tabs">
+									<ul class="ucd-tabs-nav">
+										<li class="ucd-tabs-tab active" data-closable="false"><a href="#js-tab3">源数据配置</a></li>
+										<li class="ucd-tabs-tab" data-closable="false"><a href="#js-tab4">目标数据配置</a></li>
+										<li class="ucd-tabs-tab" data-closable="false"><a href="#js-tab5">同步字段配置</a></li>
+									</ul>
+									<div class="ucd-tabs-pane active" id="js-tab3">
+										<div class="title-h3 m-t-0">
+											<span class="section-title-inner">数据连接选择</span>
 										</div>
-									</div>
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>内容分隔符
+										<div class="form-wrap info-wrap">
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>数据传输名称
+													</div>
+													<div class="form-control">name2(db2.table 2)name2(db2.tab lename2(db2.ta...</div>
+												</div>
 											</div>
-											<div class="form-control">XXXXXXX</div>
-										</div>
-									</div>
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>数据目录
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>创建者
+													</div>
+													<div class="form-control">Admin</div>
+												</div>
 											</div>
-											<div class="form-control">/home/game</div>
-										</div>
-									</div>
-								</div>
-								<div class="form-wrap info-wrap">
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>源文件路径
-											</div>
-											<div class="form-control">请输入</div>
-										</div>
-									</div>
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>同步后是否删除源文件
-											</div>
-											<div class="form-control">删除</div>
-										</div>
-									</div>
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>文件编码格式
-											</div>
-											<div class="form-control">UTF-8</div>
-										</div>
-									</div>
-								</div>
+											<div class="form-item">
 
-								<div class="form-wrap info-wrap">
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>空字符替换
 											</div>
-											<div class="form-control">XXXXXXXX</div>
 										</div>
-									</div>
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>是否需要将首行作为列名称
-											</div>
-											<div class="form-control">否</div>
+										<div class="title-h3">
+											<span class="section-title-inner">源数据展示</span>
 										</div>
-									</div>
-									<div class="form-item">
-										<div class="form-group">
-											<div class="form-label">
-												<span class="text-warn">*</span>忽略前几行配置
+										<div class="form-wrap info-wrap">
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>文件类型选择
+													</div>
+													<div class="form-control">CSV</div>
+												</div>
 											</div>
-											<div class="form-control">XXXXXXXX</div>
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>内容分隔符
+													</div>
+													<div class="form-control">XXXXXXX</div>
+												</div>
+											</div>
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>数据目录
+													</div>
+													<div class="form-control">/home/game</div>
+												</div>
+											</div>
+										</div>
+										<div class="form-wrap info-wrap">
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>源文件路径
+													</div>
+													<div class="form-control">请输入</div>
+												</div>
+											</div>
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>同步后是否删除源文件
+													</div>
+													<div class="form-control">删除</div>
+												</div>
+											</div>
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>文件编码格式
+													</div>
+													<div class="form-control">UTF-8</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="form-wrap info-wrap">
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>空字符替换
+													</div>
+													<div class="form-control">XXXXXXXX</div>
+												</div>
+											</div>
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>是否需要将首行作为列名称
+													</div>
+													<div class="form-control">否</div>
+												</div>
+											</div>
+											<div class="form-item">
+												<div class="form-group">
+													<div class="form-label">
+														<span class="text-warn">*</span>忽略前几行配置
+													</div>
+													<div class="form-control">XXXXXXXX</div>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
-							<div class="ucd-tabs-pane" id="js-tab2">
-
 							</div>
 						</div>
 					</section>
@@ -192,16 +205,23 @@
 		<script type="text/javascript" src="js/UCD.min.js"></script>
 		<script type="text/javascript" src="js/Base.js"></script>
 		<script>
-			//tab
-			new UCD.Tabs('.tabs');
+			//tabs
+			$('.tabs').each(function(){
+				new UCD.Tabs(this);
+			});
+			
 			//resizable
 			new UCD.Resizable('.edit-area-grid', {
 				directions: ['bottom']
 			});
 						
 			new UCD.Workflow('#js-workflow',{
-				create:function(){
-					$('.workflow',this).draggabilly();
+				enableDrop:function(e,$el,$source){
+					return true;
+					//return confirm('确定放置吗？');
+				},
+				onIllegalLine:function(){
+					alert('不合法')
 				}
 			});
 		</script>
