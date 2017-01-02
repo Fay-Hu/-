@@ -6,11 +6,21 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>数据分析服务</title>
-		<link rel="stylesheet" href="resources/default/css/base.min.css" />
+		<link rel="stylesheet" href="css/base.css" />
+		<link rel="stylesheet" href="css/workflow.css" />
 		<!--[if lt IE 9]>
 		    <script src="js/respond.min.js"></script>
 		    <script src="js/html5shiv.min.js"></script>
 		<![endif]-->
+		<style type="text/css">
+			.icon {
+				width: 20px;
+				height: 20px;
+				display: inline-block;
+				background: #5CCBB1 !important;
+				border-radius: 50%;
+			}
+		</style>
 	</head>
 
 	<body>
@@ -18,179 +28,36 @@
 		<div class="container no-gutter">
 			<div class="wrapper no-gutter edit">
 				<div class="side-left edit-bar small">
-					<p class="title text-h4 m-t-little">新建工作流</p>
-					<p class="title-line-b text-gray text-font-default p-t-0">
-						选择任务类型
-					</p>
 					<ul class="worktask">
-						<li class="item" draggable="true" data-dragtype="workflow" data-task-icon="icon-task-transfer-small" data-task-label="name1(db1.table1)name1(db1.tablename1(db1.table)">
+						<li class="item" draggable="true" data-dragtype="workflow" data-task-type="transfer" data-task-label="name1(db1.table1)name1(db1.tablename1(db1.table)">
 							<i class="icon icon-task-transfer"></i>
 							<p class="text">数据传输任务</p>
 						</li>
-						<li class="item" draggable="true" data-dragtype="workflow" data-task-icon="icon-task-count-small" data-task-label="name2(db2.table2)name2(db2.tablename2(db2.table)">
+						<li class="item" draggable="true" data-dragtype="workflow" data-task-type="count" data-task-label="name2(db2.table2)name2(db2.tablename2(db2.table)">
 							<i class="icon icon-task-count"></i>
 							<p class="text">数据计算任务</p>
 						</li>
 					</ul>
 				</div>
 				<section class="section-box content-with-sideleft no-gutter">
-					<div class="section-head">
-						<span class="title">
-							<i class="icon icon-edit m-r-little"></i>
-							<input class="input title-input" type="text" placeholder="请输入工作流任务名称">
-						</span>
-						<div class="icon-tools float-right">
-							<a href="javascript:;"><i class="icon icon-undo"></i></a>
-							<a href="javascript:;"><i class="icon icon-redo"></i></a>
-							<a href="javascript:;"><i class="icon icon-clean"></i></a>
-							<a href="javascript:;"><i class="icon icon-debug"></i></a>
-							<a href="javascript:;"><i class="icon icon-split"></i></a>
-							<a href="javascript:;"><i class="icon icon-save"></i></a>
-							<a href="javascript:;"><i class="icon icon-close"></i></a>
-						</div>
-					</div>
 					<section class="section no-gutter">
-						<div class="edit-area-higher edit-area-grid">
-							<div class="edit-content p" id="js-workflow">
-								<div class="workflow start">
+						<div class="edit-area edit-area-grid">
+							<div class="edit-content p" style="height: 800px;width: 800px;overflow: auto;background: #E6E9EF;position: relative;" id="js-workflow">
+								<div class="workflow start" data-task-type="start">
 									<div class="workflow-content">
-										<span class="text">开始</span>
+										<p class="text">开始</p>
+									</div>
+									<div class="workflow-footer">
 										<div class="workflow-pointer">
 											<i class="icon icon-pointer-simple"></i>
 										</div>
 									</div>
 								</div>
-								<div class="workflow end">
+								<div class="workflow end" data-task-type="end">
 									<div class="workflow-content">
-										<span class="text">结束</span>
+										<p class="text">结束</p>
 										<div class="workflow-pointer">
 											<i class="icon icon-pointer-simple"></i>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</section>
-					<section class="section" lang="en">
-						<div class="tabs">
-							<ul class="ucd-tabs-nav m-r-0 p-b-little border-bottom-solid">
-								<li class="ucd-tabs-tab active" data-closable="false"><a href="#js-tab1">详情查看</a></li>
-								<li class="ucd-tabs-tab" data-closable="false"><a href="#js-tab2">历史任务</a></li>
-							</ul>							
-							<div class="ucd-tabs-pane active" id="js-tab1">
-
-								<div class="tabs">
-									<ul class="ucd-tabs-nav">
-										<li class="ucd-tabs-tab active" data-closable="false"><a href="#js-tab3">源数据配置</a></li>
-										<li class="ucd-tabs-tab" data-closable="false"><a href="#js-tab4">目标数据配置</a></li>
-										<li class="ucd-tabs-tab" data-closable="false"><a href="#js-tab5">同步字段配置</a></li>
-									</ul>
-									<div class="ucd-tabs-pane active" id="js-tab3">
-										<div class="title-h3 m-t-0">
-											<span class="section-title-inner">数据连接选择</span>
-										</div>
-										<div class="form-wrap info-wrap">
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>数据传输名称
-													</div>
-													<div class="form-control">name2(db2.table 2)name2(db2.tab lename2(db2.ta...</div>
-												</div>
-											</div>
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>创建者
-													</div>
-													<div class="form-control">Admin</div>
-												</div>
-											</div>
-											<div class="form-item">
-
-											</div>
-										</div>
-										<div class="title-h3">
-											<span class="section-title-inner">源数据展示</span>
-										</div>
-										<div class="form-wrap info-wrap">
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>文件类型选择
-													</div>
-													<div class="form-control">CSV</div>
-												</div>
-											</div>
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>内容分隔符
-													</div>
-													<div class="form-control">XXXXXXX</div>
-												</div>
-											</div>
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>数据目录
-													</div>
-													<div class="form-control">/home/game</div>
-												</div>
-											</div>
-										</div>
-										<div class="form-wrap info-wrap">
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>源文件路径
-													</div>
-													<div class="form-control">请输入</div>
-												</div>
-											</div>
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>同步后是否删除源文件
-													</div>
-													<div class="form-control">删除</div>
-												</div>
-											</div>
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>文件编码格式
-													</div>
-													<div class="form-control">UTF-8</div>
-												</div>
-											</div>
-										</div>
-
-										<div class="form-wrap info-wrap">
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>空字符替换
-													</div>
-													<div class="form-control">XXXXXXXX</div>
-												</div>
-											</div>
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>是否需要将首行作为列名称
-													</div>
-													<div class="form-control">否</div>
-												</div>
-											</div>
-											<div class="form-item">
-												<div class="form-group">
-													<div class="form-label">
-														<span class="text-warn">*</span>忽略前几行配置
-													</div>
-													<div class="form-control">XXXXXXXX</div>
-												</div>
-											</div>
 										</div>
 									</div>
 								</div>
@@ -201,28 +68,55 @@
 			</div>
 		</div>
 		<div class="footer footer-bggray" id="footer"></div>
-		<script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>
-		<script type="text/javascript" src="js/UCD.min.js"></script>
-		<script type="text/javascript" src="js/Base.js"></script>
+		<dialog>
+			<button id="btn-ok" data-dissmiss="dialog">确认</button>
+			<button id="btn-cancel" data-dissmiss="dialog">取消</button>
+		</dialog>
+		<script type="text/javascript" src="js/jquery-1.11.0.js"></script>
+		<script type="text/javascript" src="js/ucd/ucd.js"></script>
+		<script type="text/javascript" src="js/pointer_event_profill.js"></script>
+		<script type="text/javascript" src="js/ucd/widgets.js"></script>
+		<script type="text/javascript" src="js/draggabilly.js"></script>
+		<script type="text/javascript" src="js/workflow.js"></script>
 		<script>
-			//tabs
-			$('.tabs').each(function(){
-				new UCD.Tabs(this);
-			});
-			
-			//resizable
-			new UCD.Resizable('.edit-area-grid', {
-				directions: ['bottom']
-			});
-						
-			new UCD.Workflow('#js-workflow',{
-				enableDrop:function(e,$el,$source){
+			//tab
+			//			new UCD.Tabs('.tabs');
+			//			//resizable
+			//			new UCD.Resizable('.edit-area-grid', {
+			//				directions: ['bottom']
+			//			});
+
+			var workflow = new UCD.Workflow('#js-workflow', {
+				enableDrop: function(e, el, source) {
+					$('dialog').data('dropEl',el.hide())[0].showModal();
 					return true;
-					//return confirm('确定放置吗？');
 				},
-				onIllegalLine:function(){
-					alert('不合法')
+				onIllegallyLine: function(start, end, error) {
+					switch(error.type) {
+						case 'lineRepetition':
+							alert('不能重复连线');
+							break;
+						case 'lineBackFlow':
+							alert('连线不能回流');
+							break;
+						case 'lineToRoot':
+							alert('不能连线到开始节点');
+							break;
+						default:
+							break;
+					}
 				}
+			});
+			$.getJSON('mock/workflow.json').then(function(data) {
+				workflow.recover(data);
+			});
+
+			$('[data-dissmiss="dialog"]').click(function() {
+				$(this).closest('dialog')[0].close();
+				$(this).closest('dialog').data('dropEl').show();
+			});
+			$('#btn-cancel').click(function() {
+				$(this).closest('dialog').data('dropEl').remove();
 			});
 		</script>
 	</body>
