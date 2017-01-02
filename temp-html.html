@@ -91,7 +91,7 @@
 					$('dialog').data('dropEl',el.hide())[0].showModal();
 					return true;
 				},
-				onIllegallyLine: function(start, end, error) {
+				onIllegallyLine: function(source, target, error) {
 					switch(error.type) {
 						case 'lineRepetition':
 							alert('不能重复连线');
