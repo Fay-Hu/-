@@ -110,7 +110,7 @@ UCD.registerWidget('Workflow', function(SUPER) {
 			uidPrefix: '',
 			childrenField: 'following',
 			onCreateNode: $.noop,
-			//params [start, end, error]
+			//params [source, target, error]
 			onIllegallyLine: $.noop,
 			/**
 			 * 针对每个节点的是否允许拖放的回掉
@@ -124,7 +124,7 @@ UCD.registerWidget('Workflow', function(SUPER) {
 			/**
 			 * 序列化回调，用于在getData()中自定义数据
 			 * @param {Object} $node
-			 * @return {Object} data
+			 * @param {Object} datai
 			 */
 			onSerialize:function($node,datai){
 				return datai;
