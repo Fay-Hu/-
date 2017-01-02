@@ -26,10 +26,21 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		},
 		_createNS = function(tagName, attrs) {
 			var $node = $(document.createElementNS(NS_svg, tagName));
-			if (attrs) {
+
+			if(attrs) {
 				$node.attr(attrs);
 			}
 			return $node;
+		},
+		_inArray = function(obj, array) {
+			var index = -1;
+
+			$.each(array, function(i, v) {
+				if(obj instanceof $ && obj.is(v)) {
+					index = i
+				} else if(obj === v) index = i;
+			});
+			return index;
 		},
 		/**
 		 * 模板字符串替换，变量用${v}表示
@@ -38,7 +49,7 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		 * @param      {array}  variables   字符串变量数组
 		 * @return     {string}  The string.
 		 */
-		getTplString = function(string, variables) {
+		_getTplString = function(string, variables) {
 			var serial = 0;
 
 			return string.replace(/\$\{\w+\}/g, function() {
@@ -54,15 +65,18 @@ UCD.registerWidget('Workflow', function(SUPER) {
 			preset: 'workflow-preset'
 		},
 		ATTRS = {
-			icon: 'data-task-icon',
-			label: 'data-task-label'
+			nodeId: 'id',
+			nodeType: 'data-task-type',
+			nodeLabel: 'data-task-label'
 		},
 		SELECTORS = {
 			item: '.workflow',
+			itemLabel: '.workflow-content>p',
 			itemStart: '.start',
 			itemEnd: '.end',
-			itemSorE: '.workflow.start,.workflow.end',
+			itemStartEnd: '.workflow.start,.workflow.end',
 			lineWrap: '.workflow-line-wrap',
+			presetStage: '.workflow-preset-stage',
 			line: '.workflow-line',
 			dissmiss: '[data-dissmiss="workflow"]'
 		},
@@ -75,11 +89,11 @@ UCD.registerWidget('Workflow', function(SUPER) {
 			lineTo: 'worckflow.lineTo'
 		},
 		TEMPLATE = [
-			'<div class="workflow">',
+			'<div class="workflow" data-task-type="${type}" id="${uid}">',
 			'	<div class="workflow-content">',
 			'		<span class="btn-close" data-dissmiss="workflow"><i class="icon icon-reset"></i></span>',
-			'		<div class="workflow-img"><i class="icon ${icon}"></i></div>',
-			'		<p class="label" contenteditable="true">${label}</p>',
+			'		<div class="workflow-img"><i class="icon workflow-icon"></i></div>',
+			'		<p class="label">${label}</p>',
 			'	</div>',
 			'	<div class="workflow-footer">',
 			'		<i class="workflow-pointer icon icon-pointer"></i>',
@@ -89,21 +103,47 @@ UCD.registerWidget('Workflow', function(SUPER) {
 	return {
 		options: {
 			draggableSelector: '[data-dragtype="workflow"]',
-			dropContainerSelector: '',
+			//节点拖拽的触发点选择器
+			draghandle: '.workflow-content',
+			//连线箭头大小
 			arrowSize: 8,
-			onIllegalLine: $.noop,
+			uidPrefix: '',
+			childrenField: 'following',
+			onCreateNode: $.noop,
+			//params [start, end, error]
+			onIllegallyLine: $.noop,
+			/**
+			 * 针对每个节点的是否允许拖放的回掉
+			 * @param {Object} e drop事件
+			 * @param {Object} $el 对应生成节点
+			 * @param {Object} $source 拖拽源节点
+			 */
 			enableDrop: function(e, $el, $source) {
 				return true;
-			}
+			},
+			/**
+			 * 序列化回调，用于在getData()中自定义数据
+			 * @param {Object} $node
+			 * @return {Object} data
+			 */
+			onSerialize:function($node,datai){
+				return datai;
+			},
+			/**
+			 * 反序列化回调
+			 * @param {Object} $node
+			 * @param {Object} datai
+			 */
+			onDeserialize:function($node,datai){
+				return $node;
+			},
+			//允许回流
+			enableLineBack: false
 		},
 
 		_create: function() {
 			SUPER._create.call(this);
-
-			this.$dropContainer = this.options.dropContainerSelector === '' ? this.element : this.element.find(this.options.dropContainerSelector);
-		},
-
-		_init: function() {
+			
 			this.$branchingLine = _createNS('svg', {
 					class: [CLASSES.lineWrap, CLASSES.presetStage].join(' '),
 					'pointer-events': 'none'
@@ -111,35 +151,53 @@ UCD.registerWidget('Workflow', function(SUPER) {
 				.append(_createNS('path').attr({
 					class: [CLASSES.line, CLASSES.preset].join(' ')
 				}))
-				.appendTo(this.$dropContainer);
+				.appendTo(this.element);
+		},
 
+		_init: function() {						
+			var _this = this;
+			this.element.find(SELECTORS.itemStartEnd).each(function() {
+				var $this = $(this),
+					uid = _getUID(_this.options.uidPrefix);
+
+				$this.attr(ATTRS.nodeId, uid)
+					.data(_this._getInitDataKeys())
+					.draggabilly({
+						handle: _this.options.draghandle
+					})
+					.on('dragMove', $.proxy(_this._handleDragItem, _this));
+
+				if($this.is(SELECTORS.itemStart)) _this.$origin = $this;
+				if($this.is(SELECTORS.itemEnd)) _this.$terminal = $this;
+			});
+
+			if(!this.$origin || !this.$terminal) throw new Error('The start node and the end node shoud be preseted!');
 			this._bindEvents();
-			this.$dropContainer.find(SELECTORS.item).draggabilly().on('dragMove', $.proxy(this._handleDragItem, this));
-
-			this.$dropContainer.find(SELECTORS.itemSorE).data(this._getInitDataKeys());
-
 			return this;
 		},
 		_bindEvents: function() {
-			var self = this;
+			var _this = this;
 			this.document.on('dragstart', this.options.draggableSelector, function(e) {
 
 				var $this = $(e.target);
 
-				if (!$this.attr('id')) $this.attr('id', _getUID('workflow-item-'));
+				if(!$this.attr('id')) $this.attr('id', _getUID('draggable-'));
 
 				e = e.originalEvent;
 				e.dataTransfer.setData("Text", $this.attr('id'));
 			});
 
-			this._on(this.$dropContainer, {
+			this._on(this.element, {
 				'dragover': '_handleDragover',
 				'drop': '_handleDrop',
-				'mousedown .workflow-pointer': '_handleBranchMousedown',
+				'mousedown .workflow-pointer': '_handleBranchMousedown',			
+				'scroll': '_handleScroll',
+				'click .workflow-line': '_handleLineClick',
+				'click [data-dissmiss="workflow"]': '_handleItemDissmiss'
+			});
+			this._on(this.document,{
 				'mousemove': '_handleBranchMousemove',
-				'mouseout': '_clearPreset',
 				'mouseup': '_handleBranchMouseup',
-				'dblclick .workflow-line-wrap': '_handleLineDblClick'
 			});
 		},
 		_handleDragover: function(e) {
@@ -152,26 +210,23 @@ UCD.registerWidget('Workflow', function(SUPER) {
 			e.stopPropagation();
 
 			var
-				offset = this.$dropContainer.offset(),
+				offset = this.element.offset(),
 				$target = $(document.getElementById(e.originalEvent.dataTransfer.getData("Text")));
 			//防止其他结构意外拖入
-			if (!$target.is(this.options.draggableSelector)) {
+			if(!$target.is(this.options.draggableSelector)) {
 				return false;
 			}
 
-			var newItem = this._createItem($target.attr(ATTRS.icon), $target.attr(ATTRS.label) || $target.text());
-			//是否允许drop回调
-			if (!this.options.enableDrop.call(this, e, newItem, $target)) {
+			var newItem = this._createNode($target.attr(ATTRS.nodeType), _getUID(this.options.uidPrefix), $target.attr(ATTRS.nodeLabel) || $target.text())
+				.css({
+					position: 'absolute',
+					left: originalE.pageX - offset.left,
+					top: originalE.pageY - offset.top
+				});
+			//回调函数，是否允许drop
+			if(!this.options.enableDrop.call(this, e, newItem, $target)) {
 				return false;
 			}
-			this.$dropContainer.append(newItem.draggabilly()
-					.on('dragMove', $.proxy(this._handleDragItem, this))
-					.css({
-						position: 'absolute',
-						left: originalE.pageX - offset.left,
-						top: originalE.pageY - offset.top
-					}))
-				.on('click', SELECTORS.dissmiss, $.proxy(this._handleItemDissmiss, this));
 
 			return this;
 		},
@@ -183,19 +238,19 @@ UCD.registerWidget('Workflow', function(SUPER) {
 		_handleBranchMousedown: function(e) {
 			var
 				originalE = e.originalEvent,
-				offset = this.$dropContainer.offset();
+				offset = this.element.offset();
 
 			e.stopPropagation();
 			e.preventDefault();
 
 			this.$brachingStart = $(e.target).closest(SELECTORS.item);
 
-			if (this.$brachingStart.is(SELECTORS.itemEnd)) return false;
+			if(this.$brachingStart.is(SELECTORS.itemEnd)) return false;
 			this.branching = true;
 			this.brachingStart = [originalE.pageX - offset.left, originalE.pageY - offset.top];
 		},
 		_handleBranchMousemove: function(e) {
-			if (!this.branching) return;
+			if(!this.branching) return;
 
 			this.drawBranch = false;
 			e.stopPropagation();
@@ -203,29 +258,26 @@ UCD.registerWidget('Workflow', function(SUPER) {
 
 			var
 				originalE = e.originalEvent,
-				offset = this.$dropContainer.offset(),
+				offset = this.element.offset(),
 				cx = originalE.pageX - offset.left,
 				cy = originalE.pageY - offset.top,
 				$target = $(e.target).closest(SELECTORS.item);
 
 			this._clearPreset();
 
-			if ($target.length && !$target.is(this.$brachingStart)) {
-				this.$dropContainer.append(this.$presetLine = this._createLine(this.$brachingStart, $target).data(DATA.lineFrom, this.$brachingStart).data(DATA.lineTo, $target));
+			if($target.length && !$target.is(this.$brachingStart)) {
+				this.element.append(this.$presetLine = this._createLine(this.$brachingStart, $target)
+					.data(DATA.lineFrom, this.$brachingStart).data(DATA.lineTo, $target));
 				this.drawBranch = true;
 			} else {
-				this.$branchingLine.find('path').attr({
+				this.$branchingLine.find(SELECTORS.line).attr({
 					d: this._getLinePath(this.brachingStart, [cx, cy])
-				});
-				this.$branchingLine.css({
-					left: this.$dropContainer.scrollLeft(),
-					top: this.$dropContainer.scrollTop()
 				});
 			}
 		},
 
 		_handleBranchMouseup: function(e) {
-			if (!this.branching) return;
+			if(!this.branching) return;
 
 			this.branching = false;
 
@@ -233,20 +285,29 @@ UCD.registerWidget('Workflow', function(SUPER) {
 
 			this._clearPreset();
 		},
-		_handleLineDblClick: function(e) {
-			$(e.target).closest('svg').remove();
+
+		_handleLineClick: function(e) {
+			this.deleteLine($(e.target).closest(SELECTORS.lineWrap));
+		},
+		_handleScroll: function(e) {
+			this._adaptBranchStage();
 		},
 		_handleDragItem: function(e, pointer, moveVector) {
-			this.resetLines.call(this, $(e.currentTarget));
+			this.repaintLines($(e.currentTarget))._adaptBranchStage();
 		},
-
+		_adaptBranchStage:function(){
+			this.$branchingLine.css({
+				left: this.element.scrollLeft(),
+				top: this.element.scrollTop()
+			});
+		},
 		/**
-		 * 根据起点和终点获取连线路径
+		 * 根据起点和终点坐标获取连线路径
 		 * @param {Object} startP
 		 * @param {Object} endP
 		 * @param {Object} isVertical
 		 */
-		_getLinePath: function(startP, endP, isVertical) {
+		_getLinePath: function(startP, endP, type) {
 			var
 				arrowDiffW = this.options.arrowSize,
 				arrowDiffH = Math.round(arrowDiffW * 3 / 4),
@@ -258,78 +319,106 @@ UCD.registerWidget('Workflow', function(SUPER) {
 				arrowPointLeft = [endP[0] - arrowDiffH, endP[1] - symbolY * arrowDiffW],
 				arrowPointRight = [endP[0] + arrowDiffH, arrowPointLeft[1]];
 
-			if (isVertical) {
+			if(type === 'top' || type === 'bottom') {
 				return [
 					'M', startP.join(','), 'L', [endP[0], endP[1] - symbolY * arrowDiff].join(','), 'L', [endP[0], endP[1] - symbolY * arrowDiffW].join(','),
-					'L', arrowPointLeft.join(','), 'L', endP.join(','), 'L', arrowPointRight.join(','), 'L', [endP[0], endP[1] - symbolY * arrowDiffW].join(','), 'L', [endP[0], endP[1] - symbolY * arrowDiff].join(','), 'Z'
+					'L', arrowPointLeft.join(','), 'L', endP.join(','), 'L', arrowPointRight.join(','), 'L', [endP[0], endP[1] - symbolY * arrowDiffW].join(','), 'L', [endP[0], endP[1] - symbolY * arrowDiff].join(',')
 				].join(' ');
 			} else {
 				return [
 					'M', startP.join(','), 'L', [endP[0] - symbolX * arrowDiff, endP[1]].join(','), 'L', [endP[0] - symbolX * arrowDiffW, endP[1]].join(','),
-					'L', arrowPointTop.join(','), 'L', endP.join(','), 'L', arrowPointBottom.join(','), 'L', [endP[0] - symbolX * arrowDiffW, endP[1]].join(','), 'L', [endP[0] - symbolX * arrowDiff, endP[1]].join(','), 'Z'
+					'L', arrowPointTop.join(','), 'L', endP.join(','), 'L', arrowPointBottom.join(','), 'L', [endP[0] - symbolX * arrowDiffW, endP[1]].join(','), 'L', [endP[0] - symbolX * arrowDiff, endP[1]].join(',')
 				].join(' ');
 			}
 		},
 		/**
-		 * 根据起点和终点dom结构获取连线路径
-		 * @param {Object} $start
-		 * @param {Object} $end
+		 * 根据起点和终点dom节点获取连线路径
+		 * @param {Object} $source
+		 * @param {Object} $target
 		 */
-		_getLinePathFromEle: function($start, $end) {
+		_getLinePathFromEle: function($source, $target) {
 			var
-				scrollTop = this.$dropContainer.scrollTop(),
-				scrollLeft = this.$dropContainer.scrollLeft(),
-				startX = $start.position().left + scrollLeft,
-				startY = $start.position().top + scrollTop,
-				endX = $end.position().left + scrollLeft,
-				endY = $end.position().top + scrollTop,
-				xMin = Math.min(startX, endX),
-				yMin = Math.min(startY, endY),
-				deltaX = endX - startX,
-				deltaY = endY - startY,
-				//在左边的item
-				L = deltaX >= 0 ? $start : $end,
-				L_left = L.position().left + scrollLeft,
-				L_top = L.position().top + scrollTop,
-				//在右边的item
-				R = deltaX < 0 ? $start : $end,
-				R_left = R.position().left + scrollLeft,
-				R_top = R.position().top + scrollTop,
-				T = deltaY >= 0 ? $start : $end,
-				B = deltaY < 0 ? $start : $end;
+				start_x = $source.position().left,
+				start_y = $source.position().top,
+				end_x = $target.position().left,
+				end_y = $target.position().top,
+				//左侧节点
+				L = start_x > end_x ? $target : $source,
+				//上侧节点
+				T = start_y > end_y ? $target : $source,
+				centerX = (Math.abs(end_x - start_x) - L.width()) / 2 + L.width(),
+				centerY = (Math.abs(end_y - start_y) - T.height()) / 2 + T.height(),
+				xMin = Math.min(start_x, end_x),
+				yMin = Math.min(start_y, end_y),
+				arrowSize = this.options.arrowSize;
 
-			var arrowSize = this.options.arrowSize;
-
-			var path, lineStart, lineEnd;
-			//判断左右连线还是上下连线
-			if (R_left - L_left <= L.width()) {
-				lineStart = [L.width() / 2, L_top - yMin + (L.is(T) ? L.height() : 0)];
-				lineEnd = [R_left - xMin + R.width() / 2, R_top - yMin + (R.is(T) ? R.height() : 0)];
-				path = deltaY > 0 ? this._getLinePath(lineStart, lineEnd, true) : this._getLinePath(lineEnd, lineStart, true);
-			} else {
-				lineStart = [L.width(), L_top - yMin + L.height() / 2];
-				lineEnd = [R_left + scrollLeft - xMin, R_top - yMin + R.height() / 2];
-				path = deltaX > 0 ? this._getLinePath(lineStart, lineEnd) : this._getLinePath(lineEnd, lineStart);
-			}
+			var
+				lineStart = this._getClosestAnchor(this._getNodePoints($source, xMin, yMin), centerX, centerY),
+				lineEnd = this._getClosestAnchor(this._getNodePoints($target, xMin, yMin), centerX, centerY);
 
 			return {
-				path: path,
-				//包裹线的svg的样式
+				//线条path值 d
+				path: this._getLinePath(lineStart.point, lineEnd.point, lineEnd.type),
+				//线条位置样式
 				wrapCss: {
-					width: Math.max(lineStart[0], lineEnd[0]) + arrowSize,
-					height: Math.max(lineStart[1], lineEnd[1]) + arrowSize,
-					left: xMin,
-					top: yMin
+					width: Math.max(lineStart.point[0], lineEnd.point[0]) + arrowSize,
+					height: Math.max(lineStart.point[1], lineEnd.point[1]) + arrowSize,
+					left: xMin + this.element.scrollLeft(),
+					top: yMin + this.element.scrollTop()
 				}
 			}
 		},
 		/**
-		 * 
-		 * @param {Object} $start
-		 * @param {Object} $end
+		 * 获取最近的连线点
+		 * @param {Object} anchors
+		 * @param {Object} centerX
+		 * @param {Object} centerY
 		 */
-		_createLine: function($start, $end) {
-			var linePath = this._getLinePathFromEle($start, $end);
+		_getClosestAnchor: function(anchors, centerX, centerY) {
+			var
+				minDis = Infinity,
+				anchor = {};
+
+			$.each(anchors, function(i, v) {
+				var dis = Math.pow(v[0] - centerX, 2) + Math.pow(v[1] - centerY, 2);
+				if(dis < minDis) {
+					minDis = dis;
+					anchor.point = v;
+					anchor.type = i;
+				}
+			});
+
+			return anchor;
+		},
+		/**
+		 * 根据节点获取节点上四个方向的连线点
+		 * @param {Object} $node
+		 * @param {Object} O 起点
+		 */
+		_getNodePoints: function($node, ox, oy) {
+			var
+				//计算位置要加上容器滚动条距离
+				offset = $node.position(),
+				offset_x = offset.left,
+				offset_y = offset.top,
+				width = $node.width(),
+				height = $node.height();
+
+			return {
+				top: [offset_x - ox + width / 2, offset_y - oy],
+				bottom: [offset_x - ox + width / 2, offset_y - oy + height],
+				left: [offset_x - ox, offset_y - oy + height / 2],
+				right: [offset_x - ox + width, offset_y - oy + height / 2]
+			};
+
+		},
+		/**
+		 * 
+		 * @param {Object} $source
+		 * @param {Object} $target
+		 */
+		_createLine: function($source, $target) {
+			var linePath = this._getLinePathFromEle($source, $target);
 
 			var $line = _createNS('svg', {
 					class: CLASSES.lineWrap,
@@ -354,58 +443,119 @@ UCD.registerWidget('Workflow', function(SUPER) {
 
 			return keys;
 		},
-		_createItem: function() {
-
-			return $(getTplString(TEMPLATE, arguments)).clone().data(this._getInitDataKeys());
+		_createNode: function() {
+			var $node = $(_getTplString(TEMPLATE, arguments)).clone()
+				.data(this._getInitDataKeys())
+				.draggabilly({
+					handle: this.options.draghandle
+				})
+				.on('dragMove', $.proxy(this._handleDragItem, this))
+				.appendTo(this.element);
+			this.options.onCreateNode.call(this, $node);
+			return $node;
 		},
 		_clearPreset: function() {
-			this.$presetLine && this.deleteLine(this.$presetLine);
-			this.$branchingLine.find('path').attr({
+			this.$presetLine && this.$presetLine.remove();
+			this.$branchingLine.find(SELECTORS.line).attr({
 				d: ''
 			});
 		},
 		/**
-		 * 
+		 * 遍历连线数组，然后删除
 		 * @param {Array} lines
 		 */
 		_deleteLines: function(lines) {
-			if (!$.isArray(lines)) return;
+			if(!$.isArray(lines)) return;
 
-			var self = this;
-			$.each(lines, function(i, v) {
-				self.deleteLine($(v));
+			var
+				_this = this,
+				//这里必须提前拷贝，否则deleteLine()方法会改变lines数组
+				linesCopy = lines.slice();
+			$.each(linesCopy, function(i, v) {
+				_this.deleteLine($(v));
 			});
 		},
 		/**
-		 * 添加连线
-		 * @param {Object} $start 开始节点，如果传入一个参数，则视该参数为连线
-		 * @param {Object} $end  结束节点
+		 * 检测回流,即出现连线闭合回路
+		 * @param {Object} $source 起点
+		 * @param {Object} $target 终点
+		 * @return {Boolean} flag true表示出现回流
 		 */
-		addLine: function($start, $end) {
-			var $presetLine;
-			if ($start.is(SELECTORS.lineWrap)) {
-				$presetLine = $start;
-				$start = $presetLine.data(DATA.lineFrom);
-				$end = $presetLine.data(DATA.lineTo);
-			} else {
-				$presetLine = this._createLine($start, $end).data(DATA.lineFrom, $start).data(DATA.lineTo, $end);
-			}
+		_checkBackFlow: function($source, $target) {
+			var
+				_this = this,
+				flag = false;
 
-			//TODO inArray
-			//if (~$.inArray($end, $start.data(DATA.fromNodes)) || ~$.inArray($end, $start.data(DATA.toNodes))) return this.options.onIllegalLine.call(this, $start, $end);
+			if($target.is(SELECTORS.itemEnd)) return false;
+			if(~_inArray($source, $target.data(DATA.toNodes))) return true;
 
-			this.$dropContainer.append($presetLine);
-			$start.data(DATA.fromLines).push($presetLine);
-			$start.data(DATA.toNodes).push($end);
-			$end.data(DATA.toLines).push($presetLine);
-			$end.data(DATA.fromNodes).push($start);
+			$.each($target.data(DATA.toNodes), function(i, v) {
+				var $child = $(v);
+
+				if(~_inArray($source, $child)) return flag = true;
+				flag = _this._checkBackFlow($source, $child);
+			});
+
+			return flag;
 		},
 		/**
-		 * 删除连线
+		 * 添加连线 只传一个参数则表示连线$line
+		 * @param {Object} $source 开始节点/预置连线
+		 * @param {Object} $target  结束节点,可选
+		 */
+		addLine: function($source, $target) {
+			var $presetLine;
+			if($source.is(SELECTORS.lineWrap)) {
+				$presetLine = $source;
+				$source = $presetLine.data(DATA.lineFrom);
+				$target = $presetLine.data(DATA.lineTo);
+			} else {
+				$presetLine = this._createLine($source, $target).data(DATA.lineFrom, $source).data(DATA.lineTo, $target);
+			}
+			//连线到起点
+			if($target.is(SELECTORS.itemStart)) return this.options.onIllegallyLine.call(this, $source, $target, {
+				type: 'lineToRoot'
+			});
+			//重复连线
+			if(~_inArray($target, $source.data(DATA.toNodes))) return this.options.onIllegallyLine.call(this, $source, $target, {
+				type: 'lineRepetition'
+			});
+			//检测回流
+			if(!this.options.enableLineBack && this._checkBackFlow($source, $target)) return this.options.onIllegallyLine.call(this, $source, $target, {
+				type: 'lineBackFlow'
+			});
+
+			this.element.append($presetLine);
+			$source.data(DATA.fromLines).push($presetLine);
+			$source.data(DATA.toNodes).push($target);
+			$target.data(DATA.toLines).push($presetLine);
+			$target.data(DATA.fromNodes).push($source);
+
+			return this;
+		},
+		/**
+		 * 删除连线,同时清空节点上的该条连线数据,删除节点间的关联
 		 * @param {Object} $line
 		 */
 		deleteLine: function($line) {
-			($line instanceof $) && $line.off().remove();
+			if(!$line instanceof $) return;
+
+			var
+				f_node = $line.data(DATA.lineFrom),
+				t_node = $line.data(DATA.lineTo),
+				f_lines = f_node && f_node.data(DATA.fromLines),
+				t_lines = t_node && t_node.data(DATA.toLines),
+				f_t_nodes = f_node && f_node.data(DATA.toNodes),
+				t_f_nodes = t_node && t_node.data(DATA.fromNodes);
+
+			$.isArray(f_lines) && f_lines.splice(_inArray($line, f_lines), 1);
+			$.isArray(t_lines) && t_lines.splice(_inArray($line, t_lines), 1);
+			$.isArray(t_f_nodes) && t_f_nodes.splice(_inArray(f_node, t_f_nodes), 1);
+			$.isArray(f_t_nodes) && f_t_nodes.splice(_inArray(t_node, f_t_nodes), 1);
+
+			$line.remove();
+
+			return this;
 		},
 		/**
 		 * 删除节点
@@ -416,24 +566,103 @@ UCD.registerWidget('Workflow', function(SUPER) {
 			this._deleteLines($node.data(DATA.toLines));
 			$node.data('draggabilly') && $node.data('draggabilly').destroy();
 			$node.remove();
+
+			return this;
 		},
 		/**
-		 * 重置线条
+		 * 根据节点重绘线条
 		 * @param {Object} $node 节点
 		 */
-		resetLines: function($node) {
-			var self = this;
+		repaintLines: function($node) {
+			var _this = this;
+			//遍历节点相关连线 ,重新绘制
+			$.each($node.data(DATA.fromLines).concat($node.data(DATA.toLines)), function(i, v) {
+				var
+					$line = $(v),
+					linePath = _this._getLinePathFromEle($line.data(DATA.lineFrom), $line.data(DATA.lineTo));
 
-			if ($node) {
-				//遍历节点相关连线 ,重新绘制
-				$.each($node.data(DATA.fromLines).concat($node.data(DATA.toLines)), function(i, v) {
-					var
-						$line = $(v),
-						linePath = self._getLinePathFromEle($line.data(DATA.lineFrom), $line.data(DATA.lineTo));
+				$line.css(linePath.wrapCss).find(SELECTORS.line).attr('d', linePath.path);
+			});
 
-					$line.css(linePath.wrapCss).find(SELECTORS.line).attr('d', linePath.path);
-				});
-			}
+			return this;
+		},
+		/**
+		 * 重绘所有线条
+		 * 
+		 */
+		repaintAllLines: function() {
+			var _this = this;
+
+			this.element.find(SELECTORS.item).each(function() {
+				_this.repaintLines($(this));
+			});
+
+			return this;
+		},
+		/**
+		 * 序列化
+		 */
+		getData: function() {
+			var
+				_this = this,
+				_getNode = function($node) {
+					var nodeData = {
+						uid: $node.attr(ATTRS.nodeId),
+						type: $node.attr(ATTRS.nodeType),
+						label: $node.find(SELECTORS.itemLabel).text(),
+						pos: [$node.position().left, $node.position().top]
+					};
+					nodeData = _this.options.onSerialize.call(this,$node,nodeData);
+					if($node.data(DATA.toNodes).length && !$node.is(SELECTORS.itemEnd)) {
+						nodeData[_this.options.childrenField] = $.map($node.data(DATA.toNodes), function(e, i) {
+							return _getNode(e);
+						});
+					}					
+					return nodeData;
+				};
+			return _getNode(this.$origin);
+		},
+		/**
+		 * 反序列化
+		 * @param {Object} data
+		 */
+		recover: function(data) {
+			//清空其他结构
+			this.element.children().not([SELECTORS.itemStartEnd, SELECTORS.presetStage].join(',')).remove();
+			if(!data) return;
+			var
+				_this = this,
+				childrenField = _this.options.childrenField,
+				_recoverNode = function(datai, $prevNode) {
+					$.each(datai, function(i, v) {
+						var
+							$searcher = $('#' + v.uid),
+							$newNode = $searcher.length ? $searcher :
+							v.type === 'end' ? _this.$terminal :
+							_this._createNode(v.type, v.uid, v.label);
+
+						$newNode.css({
+							position: 'absolute',
+							left: v.pos[0],
+							top: v.pos[1]
+						});
+						$newNode = _this.options.onDeserialize.call(this,$newNode,v);
+						//过滤重复连线
+						if(!~_inArray($newNode, $prevNode.data(DATA.toNodes))) {
+							_this.addLine($prevNode, $newNode)
+						}
+						if(v[childrenField]) {
+							_recoverNode(v[childrenField], $newNode);
+						}					
+					});
+				};
+
+			_recoverNode(data[childrenField], this.$origin.css({
+				position: 'absolute',
+				left: data.pos[0],
+				top: data.pos[1]
+			}));
+			return this;
 		}
 	};
 });
