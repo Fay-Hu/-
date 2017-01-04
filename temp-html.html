@@ -34,9 +34,7 @@
 						onNext: function() {
 							var deferred = new $.Deferred();
 
-							$('view').one('/content.router.ready', function() {
-								deferred.resolve();
-							});
+							$('view').one('/content.router.ready', deferred.resolve);
 							page('/content');
 							return deferred.promise();
 						}
