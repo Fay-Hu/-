@@ -1,123 +1,95 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 
 	<head>
-		<meta charset="UTF-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>数据分析服务</title>
-		<link rel="stylesheet" href="css/base.css" />
-		<link rel="stylesheet" href="css/workflow.css" />
-		<!--[if lt IE 9]>
-		    <script src="js/respond.min.js"></script>
-		    <script src="js/html5shiv.min.js"></script>
-		<![endif]-->
-		<style type="text/css">
-			.icon {
-				width: 20px;
-				height: 20px;
-				display: inline-block;
-				background: #5CCBB1 !important;
-				border-radius: 50%;
-			}
-		</style>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" href="css/bootstrap-tour-standalone.min.css" />
 	</head>
 
 	<body>
-		<div class="nosub" id="header1"></div>
-		<div class="container no-gutter">
-			<div class="wrapper no-gutter edit">
-				<div class="side-left edit-bar small">
-					<ul class="worktask">
-						<li class="item" draggable="true" data-dragtype="workflow" data-task-type="transfer" data-task-label="name1(db1.table1)name1(db1.tablename1(db1.table)">
-							<i class="icon icon-task-transfer"></i>
-							<p class="text">数据传输任务</p>
-						</li>
-						<li class="item" draggable="true" data-dragtype="workflow" data-task-type="count" data-task-label="name2(db2.table2)name2(db2.tablename2(db2.table)">
-							<i class="icon icon-task-count"></i>
-							<p class="text">数据计算任务</p>
-						</li>
-					</ul>
-				</div>
-				<section class="section-box content-with-sideleft no-gutter">
-					<section class="section no-gutter">
-						<div class="edit-area edit-area-grid">
-							<div class="edit-content p" style="height: 800px;width: 800px;overflow: auto;background: #E6E9EF;position: relative;" id="js-workflow">
-								<div class="workflow start" data-task-type="start">
-									<div class="workflow-content">
-										<p class="text">开始</p>
-									</div>
-									<div class="workflow-footer">
-										<div class="workflow-pointer">
-											<i class="icon icon-pointer-simple"></i>
-										</div>
-									</div>
-								</div>
-								<div class="workflow end" data-task-type="end">
-									<div class="workflow-content">
-										<p class="text">结束</p>
-										<div class="workflow-pointer">
-											<i class="icon icon-pointer-simple"></i>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</section>
-				</section>
-			</div>
-		</div>
-		<div class="footer footer-bggray" id="footer"></div>
-		<dialog>
-			<button id="btn-ok" data-dissmiss="dialog">确认</button>
-			<button id="btn-cancel" data-dissmiss="dialog">取消</button>
-		</dialog>
+		<header id="header">
+			Header
+		</header>
+		<view>
+
+		</view>
+		<footer>
+			Footer
+		</footer>
 		<script type="text/javascript" src="js/jquery-1.11.0.js"></script>
-		<script type="text/javascript" src="js/ucd/ucd.js"></script>
-		<script type="text/javascript" src="js/pointer_event_profill.js"></script>
-		<script type="text/javascript" src="js/ucd/widgets.js"></script>
-		<script type="text/javascript" src="js/draggabilly.js"></script>
-		<script type="text/javascript" src="js/workflow.js"></script>
+		<script src="js/router.js"></script>
+		<script type="text/javascript" src="js/bootstrap-tour-standalone.min.js"></script>
 		<script>
-			//tab
-			//			new UCD.Tabs('.tabs');
-			//			//resizable
-			//			new UCD.Resizable('.edit-area-grid', {
-			//				directions: ['bottom']
-			//			});
+			$(function() {
 
-			var workflow = new UCD.Workflow('#js-workflow', {
-				enableDrop: function(e, el, source) {
-					$('dialog').data('dropEl',el.hide())[0].showModal();
-					return true;
-				},
-				onIllegallyLine: function(source, target, error) {
-					switch(error.type) {
-						case 'lineRepetition':
-							alert('不能重复连线');
-							break;
-						case 'lineBackFlow':
-							alert('连线不能回流');
-							break;
-						case 'lineToRoot':
-							alert('不能连线到开始节点');
-							break;
-						default:
-							break;
-					}
+				var tour = new Tour({
+					debug: true,
+					orphan: true,
+					smartPlacement: true,
+					steps: [{
+						element: "#header",
+						title: "Title of my step",
+						content: "Content of my step",
+						onNext: function() {
+							var deferred = new $.Deferred();
+
+							$('view').one('/content.router.ready', function() {
+								deferred.resolve();
+							});
+							page('/content');
+							return deferred.promise();
+						}
+					}, {
+						element: "#content",
+						title: "Title of my step",
+						content: "Content of my step",
+						onPrev: function() {
+							page('/home');
+						}
+					}]
+				});
+				$('view').one('/home.router.ready', function() {
+					tour.init();
+					tour.start();
+				});
+				
+				page({
+					click: true,
+					hashbang: true,
+					dispatch: false,
+					popstate: true
+				})
+
+				page('/content', show)
+				page('/home', index)
+				page('*', index)
+					//			page('*', function(ctx, next) {
+					//				if(ctx.init) {
+					//					next();
+					//				}
+					//			})
+
+				page()
+				if(location.hash !== '') {
+					page(location.hash.replace(/^#\?/, ''));
+				} else {
+					page('/home')
 				}
-			});
-			$.getJSON('mock/workflow.json').then(function(data) {
-				workflow.recover(data);
-			});
 
-			$('[data-dissmiss="dialog"]').click(function() {
-				$(this).closest('dialog')[0].close();
-				$(this).closest('dialog').data('dropEl').show();
-			});
-			$('#btn-cancel').click(function() {
-				$(this).closest('dialog').data('dropEl').remove();
-			});
+				function show() {
+					$('view').load('content.html', function() {
+						$(this).trigger('/content.router.ready');
+					});
+				}
+
+				function index() {
+					$('view').load('home.html', function() {
+						$(this).trigger('/home.router.ready');
+					})
+
+				}
+			})
 		</script>
 	</body>
 
