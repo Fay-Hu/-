@@ -10,31 +10,29 @@ const component = {
 	  </div>
 	`,
   style: `
-    <style>
-      .list{
-        padding:0;
-        background:black;
-      }
-      .item{
-        margin:0;
-        padding:.5em;
-        color:white;
-        background:#36bd9c;
-        list-style:none;   
-      }
-      .item:hover{
-        background:#239bc8;
-      }
-      input{
-        height: 30px;
-        padding: .3em;
-      }
-      input:focus{
-        border-color:transparent;
-        outline:none;
-        box-shadow:0 0 1px 2px #239bc8;
-      }
-	  </style>
+    .list{
+      padding:0;
+      background:black;
+    }
+    .item{
+      margin:0;
+      padding:.5em;
+      color:white;
+      background:#36bd9c;
+      list-style:none;   
+    }
+    .item:hover{
+      background:#239bc8;
+    }
+    input{
+      height: 30px;
+      padding: .3em;
+    }
+    input:focus{
+      border-color:transparent;
+      outline:none;
+      box-shadow:0 0 1px 2px #239bc8;
+    }
 	`,
   selector: 'x-searcher'
 };
@@ -62,7 +60,7 @@ class Searcher extends HTMLElement {
   }
 
   render() {
-    this.$shadowRoot.innerHTML = component.style + component.template(this.model);
+    this.$shadowRoot.innerHTML = '<style>' + component.style + '</style>' + component.template(this.model);
     this.$input = this.$shadowRoot.querySelector('input');
     this.$input.focus();
 
