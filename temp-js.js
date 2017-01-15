@@ -4,7 +4,7 @@ const component = {
 	      <input type="text" value="${model.filter}" placeholder="${model.placeHolder}"/>
 	      <ul class="list">
 	  ${model.items.map(item => ~item.text.search(model.filter) ? `
-           <li class="item">${item.text}</li>`
+          <li class="item">${item.text}</li>`
     : '').join('')}
 	      </ul>
 	  </div>
@@ -84,8 +84,8 @@ class Searcher extends HTMLElement {
     var _this = this;
     this.model = new Proxy(this.model, {
       set(target, key, value, proxy){
+        Reflect.set(target, key, value, proxy);
         _this.render.call(_this);
-        return Reflect.set(target, key, value, proxy);
       }
     });
 
@@ -94,3 +94,4 @@ class Searcher extends HTMLElement {
 }
 
 customElements.define(component.selector, Searcher);
+
