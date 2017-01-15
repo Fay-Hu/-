@@ -81,7 +81,7 @@ class Searcher extends HTMLElement {
   }
 
   _proxy() {
-    var _this = this;
+    let _this = this;
     this.model = new Proxy(this.model, {
       set(target, key, value, proxy){
         Reflect.set(target, key, value, proxy);
