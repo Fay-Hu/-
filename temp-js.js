@@ -11,27 +11,27 @@ const component = {
 	`,
   style: `
     .list{
+      display:flex;
+      margin:20px 0;
       padding:0;
-      background:black;
     }
     .item{
-      margin:0;
+      width:100px;
+      margin-right:1em;
       padding:.5em;
       color:white;
       background:#36bd9c;
-      list-style:none;   
+      list-style:none;
+      text-align:center;
     }
     .item:hover{
       background:#239bc8;
     }
     input{
       height: 30px;
+      margin:0;
       padding: .3em;
-    }
-    input:focus{
-      border-color:transparent;
-      outline:none;
-      box-shadow:0 0 1px 2px #239bc8;
+      box-sizing: border-box;
     }
 	`,
   selector: 'x-searcher'
@@ -68,7 +68,7 @@ class Searcher extends HTMLElement {
   }
 
   _observer() {
-    this.$input.addEventListener('input', (e) => {
+    this.$input.addEventListener('input', e => {
       e.target.setAttribute('value', this.model.filter = e.target.value);
     });
 
