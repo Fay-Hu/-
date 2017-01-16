@@ -1,97 +1,101 @@
 const component = {
-  template: model => `
-	  <div class="searcher">
-	      <input type="text" value="${model.filter}" placeholder="${model.placeHolder}"/>
-	      <ul class="list">
-	  ${model.items.map(item => ~item.text.search(model.filter) ? `
-          <li class="item">${item.text}</li>`
-    : '').join('')}
-	      </ul>
-	  </div>
+  template: `
+	  <canvas class="paint-stage"></canvas>
 	`,
   style: `
-    .list{
-      display:flex;
-      margin:20px 0;
-      padding:0;
-    }
-    .item{
-      width:100px;
-      margin-right:1em;
-      padding:.5em;
-      color:white;
-      background:#36bd9c;
-      list-style:none;
-      text-align:center;
-    }
-    .item:hover{
-      background:#239bc8;
-    }
-    input{
-      height: 30px;
-      margin:0;
-      padding: .3em;
-      box-sizing: border-box;
+    .paint-stage{
+      height:100%;
+      width:100%;
+      background: -webkit-linear-gradient(top,#cbebdb 0,#3794c0 120%);
     }
 	`,
-  selector: 'x-searcher'
+  selector: 'x-paint-shifter'
 };
 
-class Searcher extends HTMLElement {
+/**
+ * depends on Point,Dot
+ */
+class PaintShifter extends HTMLElement {
   constructor() {
     super();
 
     this.$shadowRoot = this.attachShadow({mode: 'closed'});
-    this.model = {
-      filter: '',
-      placeHolder: 'please input keywords',
-      items: [{
-        value: '01',
-        text: 'blue'
-      }, {
-        value: '02',
-        text: 'yellow'
-      }, {
-        value: '03',
-        text: 'red'
-      }]
-    };
+    this.model = {};
+    this.dots = [];
     this.render();
   }
 
   render() {
-    this.$shadowRoot.innerHTML = '<style>' + component.style + '</style>' + component.template(this.model);
-    this.$input = this.$shadowRoot.querySelector('input');
-    this.$input.focus();
-
-    return this._observer()._proxy();
+    this.$shadowRoot.innerHTML = '<style>' + component.style + '</style>' + component.template;
+    this.$stage = this.$shadowRoot.querySelector('.paint-stage');
+    this.context = this.$stage.getContext('2d');
+    this._init();
   }
 
-  _observer() {
-    this.$input.addEventListener('input', e => {
-      e.target.setAttribute('value', this.model.filter = e.target.value);
-    });
+  _init() {
+    const devicePixelRatio = window.devicePixelRatio || 1; //dpr
+    this.$stage.setAttribute('height', devicePixelRatio * window.getComputedStyle(this.$stage, null).height.replace(/px/, ''));
+    this.$stage.setAttribute('width', devicePixelRatio * window.getComputedStyle(this.$stage, null).width.replace(/px/, ''));
 
-    new MutationObserver(this.render.bind(this))
-      .observe(this.$input, {
-        attributes: true
-      });
-
-    return this;
+    this.productRandomDots(200);
   }
 
-  _proxy() {
-    let _this = this;
-    this.model = new Proxy(this.model, {
-      set(target, key, value, proxy){
-        Reflect.set(target, key, value, proxy);
-        _this.render.call(_this);
-      }
-    });
+  productRandomDots(num) {
+    for (let i = 0; i < num; i++) {
+      let ramX = Math.random() * this.$stage.width, ramY = Math.random() * this.$stage.height;
+      this.addDot(ramX, ramY, 5);
+    }
+  }
 
-    return this;
+  addDot(x, y, r) {
+    new Dot(this.context,{x, y, r,fillStyle: 'white'});
   }
 }
 
-customElements.define(component.selector, Searcher);
+class Point {
+  constructor(props) {
+    let {x, y, r, a, h} = props;
+    this.x = x;
+    this.y = y;
+    this.r = r;
+    this.a = a;
+    this.h = h;
+  }
+}
 
+class Dot {
+  constructor(context,opts) {
+    this.p = new Point({
+      x: opts.x,
+      y: opts.y,
+      r: opts.r,
+      a: 1,
+      h: 0
+    });
+    this.context = context;
+    this.opts = opts;
+    this.render();
+  }
+
+  render() {
+    const context = this.context;
+    context.fillStyle = this.opts.fillStyle;
+    context.beginPath();
+    context.arc(this.p.x, this.p.y, this.p.z, 0, 2 * Math.PI, true);
+    context.closePath();
+    context.fill();
+  }
+
+  clone() {
+    let {x, y, z, a, h} = this.p;
+    return new Point({
+      x: x,
+      y: y,
+      z: z,
+      a: a,
+      h: h
+    });
+  }
+}
+
+customElements.define(component.selector, PaintShifter);
