@@ -42,13 +42,16 @@ class PaintShifter extends HTMLElement {
 
   productRandomDots(num) {
     for (let i = 0; i < num; i++) {
-      let  ramX = Math.random() * this.$stage.width, ramY = Math.random() * this.$stage.height;
-      this.addDot(ramX, ramY, 5);
+      let
+        ramX = Math.random() * this.$stage.width,
+        ramY = Math.random() * this.$stage.height,
+        ramR = Math.random() * 5;
+      this.addDot(ramX, ramY, ramR);
     }
   }
 
   addDot(x, y, r) {
-    new Dot(this.context,{x:x, y:y, r:r,fillStyle: 'white'});
+    new Dot(this.context, {x: x, y: y, r: r, fillStyle: 'white'});
   }
 }
 
@@ -64,7 +67,7 @@ class Point {
 }
 
 class Dot {
-  constructor(context,opts) {
+  constructor(context, opts) {
     this.p = new Point({
       x: opts.x,
       y: opts.y,
