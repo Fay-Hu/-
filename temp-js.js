@@ -1,104 +1,109 @@
-const component = {
-  template: `
-	  <canvas class="paint-stage"></canvas>
-	`,
-  style: `
-    .paint-stage{
-      height:100%;
-      width:100%;
-      background: -webkit-linear-gradient(top,#cbebdb 0,#3794c0 120%);
-    }
-	`,
-  selector: 'x-paint-shifter'
-};
-
 /**
- * depends on Point,Dot
+ * Created by hwx336970 on 2017.01.18
+ *
+ * @memberOf UCD
+ * @class Sliding
+ * @augments UCD.Widget
  */
-class PaintShifter extends HTMLElement {
-  constructor() {
-    super();
+UCD.registerWidget('Sliding', function (SUPER) {
+  var $ = UCD.require('jquery');
+  return {
+    options: {
+      autoPlay: false,
+      loop: false,
+      initIndex: 0,
+      duration: 500,
+      interval: 3000,
+      countPadding: true,
+      onChanged: $.noop,
+      //should with style "white-space:nowrap;overflow:hidden"
+      slideSelector: '.sliding-content',
+      prevSelector: '.prev',
+      nextSelector: '.next'
+    },
 
-    this.$shadowRoot = this.attachShadow({mode: 'closed'});
-    this.model = {};
-    this.dots = [];
-    this.render();
-  }
+    _create: function () {
+      SUPER._create.call(this);
+      this.timer = null;
+      this.current = 0;
+    },
 
-  render() {
-    this.$shadowRoot.innerHTML = '<style>' + component.style + '</style>' + component.template;
-    this.$stage = this.$shadowRoot.querySelector('.paint-stage');
-    this.context = this.$stage.getContext('2d');
-    this._init();
-  }
+    _init: function () {
+      var
+        opts = this.options,
+        ele = this.element;
 
-  _init() {
-    const devicePixelRatio = window.devicePixelRatio || 1; //dpr
-    this.$stage.setAttribute('height', devicePixelRatio * window.getComputedStyle(this.$stage, null).height.replace(/px/, ''));
-    this.$stage.setAttribute('width', devicePixelRatio * window.getComputedStyle(this.$stage, null).width.replace(/px/, ''));
+      this.$box = opts.slideSelector !== '' ? ele.find(opts.slideSelector) : this.element;
+      this._on(this.$prev = ele.find(opts.prevSelector), {
+        'click': 'prev'
+      });
+      this._on(this.$next = ele.find(opts.nextSelector), {
+        'click': 'next'
+      });
 
-    this.productRandomDots(200);
-  }
+      this._on(this.window, {'resize': 'go'});
 
-  productRandomDots(num) {
-    for (let i = 0; i < num; i++) {
-      let
-        ramX = Math.random() * this.$stage.width,
-        ramY = Math.random() * this.$stage.height,
-        ramR = Math.random() * 5;
-      this.addDot(ramX, ramY, ramR);
+      this.element.on('click', [opts.prevSelector, opts.nextSelector].join(','), $.proxy(this.pause, this));
+      this.go(opts.initIndex);
+      if (opts.autoPlay) this.play();
+    },
+
+    getCurrent: function () {
+      //in order to respond to the window,recount the cuttent index every time
+      return this.current = this.$box.scrollLeft() === 0 ? 0 : Math.ceil(this.$box.scrollLeft() / this.$box.width());
+    },
+
+    prev: function () {
+      this.getCurrent();
+      this.go(--this.current);
+      return this;
+    },
+
+    next: function () {
+      this.getCurrent();
+      this.go(++this.current);
+      return this;
+    },
+
+    go: function (index) {
+      var
+        _this = this,
+        $box = this.$box,
+        loop = this.options.loop,
+        childen = this.$box.children(),
+
+        //need the items equal width
+        max_i = Math.ceil(childen.length * childen.outerWidth(true) / $box.outerWidth()) - 1;
+
+      if (typeof index !== 'number') index = this.current;
+      this.current = index = index < 0 ? (loop ? max_i : 0) : index > max_i ? (loop ? 0 : max_i) : index;
+
+      if (!loop) {
+
+        this.$prev.toggleClass('disabled', this.current === 0);
+        this.$next.toggleClass('disabled', this.current === max_i);
+      }
+
+      this.$box.stop().animate({
+        'scrollLeft': $box.width() * index + (this.options.countPadding && index !== 0 ? $box.children().css('padding-left').replace(/px/, '') * 2 : 0)
+      }, this.options.duration, 'swing', function () {
+        //call chenged
+        _this.options.onChanged.call(_this, index);
+        if (_this.options.autoPlay && !_this.timer) _this.play();
+      });
+
+      return this;
+    },
+
+    play: function () {
+      this.timer = window.setInterval($.proxy(this.next, this), this.options.interval);
+      return this;
+    },
+
+    pause: function () {
+      window.clearInterval(this.timer);
+      this.timer = null;
+      return this;
     }
-  }
-
-  addDot(x, y, r) {
-    new Dot(this.context, {x: x, y: y, r: r, fillStyle: 'white'});
-  }
-}
-
-class Point {
-  constructor(props) {
-    let {x, y, r, a, h} = props;
-    this.x = x;
-    this.y = y;
-    this.r = r;
-    this.a = a;
-    this.h = h;
-  }
-}
-
-class Dot {
-  constructor(context, opts) {
-    this.p = new Point({
-      x: opts.x,
-      y: opts.y,
-      r: opts.r,
-      a: 1,
-      h: 0
-    });
-    this.context = context;
-    this.opts = opts;
-    this.render();
-  }
-
-  render() {
-    const context = this.context;
-    context.fillStyle = this.opts.fillStyle;
-    context.beginPath();
-    context.arc(this.p.x, this.p.y, this.p.r, 0, 2 * Math.PI, true);
-    context.closePath();
-    context.fill();
-  }
-
-  clone() {
-    let {x, y, z, a, h} = this.p;
-    return new Point({
-      x: x,
-      y: y,
-      z: z,
-      a: a,
-      h: h
-    });
-  }
-}
-
-customElements.define(component.selector, PaintShifter);
+  };
+});
