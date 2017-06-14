@@ -92,7 +92,7 @@
 		},
 
 		_onMouseWheel: function(e) {
-			f(this.options.mouseWheel) {
+			if(this.options.mouseWheel) {
 				var opts = this.options
 
 				this.state.zoom *= (1 + opts.zoomSpeed * e.originalEvent.wheelDelta / Math.abs(e.originalEvent.wheelDelta))
