@@ -4,7 +4,7 @@
 		NS_SVG = 'http://www.w3.org/2000/svg'
 
 	/**
-	 * constructor
+	 * SvgZoom 
 	 * @param {Object} ele
 	 * @param {Object} opts
 	 */
@@ -54,7 +54,7 @@
 
 			this.$element.append(this.$view.append($content))
 			this.updateZoom()
-			
+
 			this._bind()
 		},
 
@@ -63,9 +63,7 @@
 				.on('mousedown', $.proxy(this._onMouseDown, this))
 				.on('mouseup', $.proxy(this._onMouseUp, this))
 				.on('mousemove', $.proxy(this._onMouseMove, this))
-
-			if(this.options.mouseWheel)
-				this.$element.on('mousewheel DOMMouseScroll wheel', $.proxy(this._onMouseWheel, this))
+				.on('mousewheel DOMMouseScroll wheel', $.proxy(this._onMouseWheel, this))
 
 		},
 
@@ -94,14 +92,16 @@
 		},
 
 		_onMouseWheel: function(e) {
-			var opts =this.options
-			
-			this.state.zoom *= (1 + opts.zoomSpeed * e.originalEvent.wheelDelta / Math.abs(e.originalEvent.wheelDelta))
-			
-			if(this.state.zoom<opts.minZoom) this.state.zoom = opts.minZoom
-			if(this.state.zoom>opts.maxZoom) this.state.zoom = opts.maxZoom
-			
-			this.updateZoom()
+			f(this.options.mouseWheel) {
+				var opts = this.options
+
+				this.state.zoom *= (1 + opts.zoomSpeed * e.originalEvent.wheelDelta / Math.abs(e.originalEvent.wheelDelta))
+
+				if(this.state.zoom < opts.minZoom) this.state.zoom = opts.minZoom
+				if(this.state.zoom > opts.maxZoom) this.state.zoom = opts.maxZoom
+
+				this.updateZoom()
+			}
 		},
 
 		updateZoom: function() {
