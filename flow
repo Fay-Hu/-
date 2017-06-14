@@ -53,7 +53,8 @@
 			this.view = this.$view.get(0)
 
 			this.$element.append(this.$view.append($content))
-
+			this.updateZoom()
+			
 			this._bind()
 		},
 
