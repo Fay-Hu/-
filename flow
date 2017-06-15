@@ -1,112 +1,171 @@
-(function(exports, $) {
-	var
-		DATA_KEY = 'data.svgzoom',
-		NS_SVG = 'http://www.w3.org/2000/svg'
+/**
+ * Created by hWX336970 on 2017/6/5.
+ */
+(function (exports, $) {
+  var
+    DATA_KEY = 'data.svgzoom',
+    NS_SVG = 'http://www.w3.org/2000/svg'
 
-	/**
-	 * SvgZoom 
-	 * @param {Object} ele
-	 * @param {Object} opts
-	 */
-	function SvgZoom(ele, opts) {
+  /**
+   * SvgZoom
+   * @param {Object} ele
+   * @param {Object} opts
+   */
+  function SvgZoom(ele, opts) {
 
-		this.$element = $(ele)
-		this.element = this.$element[0]
+    this.$element = $(ele)
+    this.element = this.$element[0]
 
-		if(!this.element instanceof SVGElement)
-			throw new Error('SvgZoom element must be svg')
+    if (!this.element instanceof SVGElement)
+      throw new Error('SvgZoom element must be svg')
 
-		if(this.$element.data(DATA_KEY)) return
+    if (this.$element.data(DATA_KEY)) return
 
-		this.$element.data(DATA_KEY, this)
-		this.options = $.extend({}, SvgZoom.Defaults, opts)
+    this.$element.data(DATA_KEY, this)
+    this.options = $.extend({}, SvgZoom.Defaults, opts)
 
-		this._init()
-	}
+    this._init()
+  }
 
-	SvgZoom.Defaults = {
-		//mouseWheel enable
-		mouseWheel: true,
-		zoomSpeed: 0.065,
-		maxZoom: Number.POSITIVE_INFINITY,
-		minZoom: 0.5,
-		initZoom: 1,
-		viewClass: 'svgzoom-view'
-	}
+  SvgZoom.Defaults = {
+    //mouseWheel enable
+    mouseWheel: true,
+    zoomSpeed: 0.065,
+    maxZoom: Number.POSITIVE_INFINITY,
+    minZoom: 0.2,
+    initZoom: 1,
+    center: true,
+    viewClass: 'svgzoom-view',
+    zoomSelector: '',
+    dragCursorStyle: 'move'
+  }
 
-	SvgZoom.prototype = {
-		_init: function() {
-			this.isDrag = false
-			this.dragStartX = 0
-			this.dragStartY = 0
-			this.state = {
-				x: 0,
-				y: 0,
-				zoom: this.options.initZoom
-			}
+  SvgZoom.prototype = {
+    _init: function () {
+      this.isDrag = false
+      this.dragStartX = 0
+      this.dragStartY = 0
+      this.state = {
+        x: 0,
+        y: 0,
+        zoom: this.options.initZoom
+      }
 
-			//add view wraper
-			var
-				$content = this.$element.children()
+      //add view wraper
+      var
+        $content = this.$element.children(this.options.zoomSelector)
 
-			this.$view = $(document.createElementNS(NS_SVG, 'g')).attr('class', this.options.viewClass)
-			this.view = this.$view.get(0)
+      this.$view = $(document.createElementNS(NS_SVG, 'g')).attr('class', this.options.viewClass)
+      this.view = this.$view.get(0)
 
-			this.$element.append(this.$view.append($content))
-			this.updateZoom()
+      this.$element.append(this.$view.append($content))
 
-			this._bind()
-		},
+      this.update()
 
-		_bind: function() {
-			this.$element
-				.on('mousedown', $.proxy(this._onMouseDown, this))
-				.on('mouseup', $.proxy(this._onMouseUp, this))
-				.on('mousemove', $.proxy(this._onMouseMove, this))
-				.on('mousewheel DOMMouseScroll wheel', $.proxy(this._onMouseWheel, this))
+      if (this.options.center) this.center()
+      //need twice update to get real size of view
 
-		},
+      this._bind()
+    },
 
-		_onMouseDown: function(e) {
-			this.isDrag = true;
-			this.dragStartX = e.clientX
-			this.dragStartY = e.clientY
-		},
+    _bind: function () {
+      this.$element
+        .on('mousedown', $.proxy(this._onMouseDown, this))
+        .on('mouseup', $.proxy(this._onMouseUp, this))
+        .on('mousemove', $.proxy(this._onMouseMove, this))
+        .on('mousewheel DOMMouseScroll wheel', $.proxy(this._onMouseWheel, this))
 
-		_onMouseUp: function(e) {
-			this.isDrag = false
-		},
+    },
 
-		_onMouseMove: function(e) {
-			if(this.isDrag) {
-				var
-					diffX = e.clientX - this.dragStartX,
-					diffY = e.clientY - this.dragStartY
+    _onMouseDown: function (e) {
+      e.preventDefault()
 
-				this.state.x += (diffX)
-				this.state.y += (diffY)
-				this.updateZoom()
-			}
-			this.dragStartX = e.clientX
-			this.dragStartY = e.clientY
-		},
+      this.isDrag = true;
+      this.dragStartX = e.clientX
+      this.dragStartY = e.clientY
+    },
 
-		_onMouseWheel: function(e) {
-			if(this.options.mouseWheel) {
-				var opts = this.options
+    _onMouseUp: function (e) {
+      e.preventDefault()
 
-				this.state.zoom *= (1 + opts.zoomSpeed * e.originalEvent.wheelDelta / Math.abs(e.originalEvent.wheelDelta))
+      this.isDrag = false
+      this.view.style.cursor = ''
+    },
 
-				if(this.state.zoom < opts.minZoom) this.state.zoom = opts.minZoom
-				if(this.state.zoom > opts.maxZoom) this.state.zoom = opts.maxZoom
+    _onMouseMove: function (e) {
+      e.preventDefault()
 
-				this.updateZoom()
-			}
-		},
+      if (this.isDrag) {
+        var
+          diffX = e.clientX - this.dragStartX,
+          diffY = e.clientY - this.dragStartY,
+          viewBoxScale = this._getViewBoxScale()
 
-		updateZoom: function() {
-			this.$view.attr('transform', 'translate(' + this.state.x + ',' + this.state.y + ') scale(' + this.state.zoom + ')')
-		}
-	}
-	exports.SvgZoom = SvgZoom
-})(window, jQuery)
+        this.view.style.cursor = this.options.dragCursorStyle
+        this.state.x += (diffX / viewBoxScale)
+        this.state.y += (diffY / viewBoxScale)
+
+        this.update()
+      }
+
+      this.dragStartX = e.clientX
+      this.dragStartY = e.clientY
+    },
+
+    _onMouseWheel: function (e) {
+      var
+        opts = this.options,
+        delta = e.originalEvent.wheelDelta || e.originalEvent.detail
+
+      delta = delta < 0 ? -1 : 1
+      if (opts.mouseWheel) {
+        this.state.zoom *= (1 + opts.zoomSpeed * delta )
+
+        this.setZoom(this.state.zoom)
+      }
+    },
+
+    _getViewBoxScale: function () {
+      //the scale should contain custom zoom
+      return this.viewBoxScale = this.view.getBoundingClientRect().width / this.element.viewBox.baseVal.width / this.state.zoom;
+    },
+
+    setZoom: function (zoom) {
+      this.state.zoom = zoom
+
+      this.update()
+      return this
+    },
+
+    setMouseWheel: function (enable) {
+      this.options.mouseWheel = !!enable
+      return this
+    },
+
+    center: function () {
+      var
+        eleRect = this.element.getBoundingClientRect(),
+        viewRect = this.view.getBoundingClientRect(),
+        viewBoxScale = this._getViewBoxScale()
+
+      this.state.x += ((eleRect.width - viewRect.width) / 2 - (viewRect.left - eleRect.left)) / viewBoxScale
+      this.state.y += ((eleRect.height - viewRect.height) / 2 - (viewRect.top - eleRect.top)) / viewBoxScale
+
+      this.update()
+
+      return this
+    },
+
+    update: function () {
+      var
+        opts = this.options
+
+      if (this.state.zoom < opts.minZoom) this.state.zoom = opts.minZoom
+      if (this.state.zoom > opts.maxZoom) this.state.zoom = opts.maxZoom
+
+      this.$view.attr('transform', 'translate(' + this.state.x + ',' + this.state.y + ') scale(' + this.state.zoom + ')')
+      return this
+    }
+  }
+  exports.SvgZoom = SvgZoom
+})(UCD, jQuery)
